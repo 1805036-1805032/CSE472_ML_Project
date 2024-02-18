@@ -27,3 +27,11 @@ Accuracy: 0.641223 (0.042660)
 Recall: 0.296199 (0.104055)
 Precision: 0.585400 (0.107142)
 F1: 0.381696 (0.107007)
+----------
+Model:  <class 'sklearn.linear_model._stochastic_gradient.SGDClassifier'>
+random_state=0, loss='log_loss'
+AUC: 0.624116 (0.070438)
+Accuracy: 0.628546 (0.041787)
+Recall: 0.458772 (0.135777)
+Precision: 0.530955 (0.065185)
+F1: 0.480672 (0.084533)

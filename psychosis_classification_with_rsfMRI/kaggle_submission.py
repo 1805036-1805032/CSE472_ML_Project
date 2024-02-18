@@ -106,7 +106,7 @@ def evaluateModelF1(model_name):
 
 
 # model selection
-model = SGDClassifier(random_state=0)
+model = CatBoostClassifier(random_state=0)
 
 
 print("-" * 10)
