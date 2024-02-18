@@ -1,0 +1,22 @@
+Model:  <class 'sklearn.linear_model._logistic.LogisticRegression'>
+max_iter = 10000, random_state = 0
+AUC: 0.643189 (0.078679)
+Accuracy: 0.618174 (0.076002)
+Recall: 0.460819 (0.131931)
+Precision: 0.508274 (0.114715)
+F1: 0.479566 (0.115469)
+----------
+Model:  <class 'sklearn.ensemble._forest.RandomForestClassifier'>
+random_state = 0
+AUC: 0.631989 (0.066251)
+Accuracy: 0.634796 (0.035510)
+Recall: 0.175146 (0.041711)
+Precision: 0.632976 (0.179431)
+F1: 0.270970 (0.062394)
+----------
+Model:  <class 'sklearn.ensemble._weight_boosting.AdaBoostClassifier'>
+AUC: 0.576141 (0.060512)
+Accuracy: 0.581738 (0.060929)
+Recall: 0.389181 (0.115187)
+Precision: 0.454363 (0.090078)
+F1: 0.414602 (0.096416)
