@@ -106,7 +106,7 @@ def evaluateModelF1(model_name):
 
 
 # model selection
-model = AdaBoostClassifier(random_state=0)
+model = SGDClassifier(random_state=0)
 
 
 print("-" * 10)
