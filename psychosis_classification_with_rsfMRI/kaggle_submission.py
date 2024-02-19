@@ -10,7 +10,8 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.linear_model import LogisticRegression
 from lightgbm import LGBMClassifier
 from sklearn.linear_model import SGDClassifier
-from catboost import CatBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
 
 
 PATH_TO_BP = "/home/mmk/4_2_resources/CSE472_ML_Project/psychosis_classification_with_rsfMRI/train/BP"
@@ -106,7 +107,7 @@ def evaluateModelF1(model_name):
 
 
 # model selection
-model = CatBoostClassifier(random_state=0)
+model = SVC(random_state=0, probability=True)
 
 
 print("-" * 10)
