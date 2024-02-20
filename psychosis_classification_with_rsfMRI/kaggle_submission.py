@@ -70,57 +70,94 @@ print("y_train_full:", y_train_full.shape)
 print("X_test_full:", len(X_test_full))
 
 
-# model metrics:
-def evaluateModelAUC(model_name):
-    scores = cross_val_score(
-        model_name, X_train_full, y_train_full, cv=10, scoring="roc_auc"
-    )
-    return scores.mean(), scores.std()
+# # model metrics:
+# def evaluateModelAUC(model_name):
+#     scores = cross_val_score(
+#         model_name, X_train_full, y_train_full, cv=10, scoring="roc_auc"
+#     )
+#     return scores.mean(), scores.std()
 
 
-def evaluateModelAccuracy(model_name):
-    scores = cross_val_score(
-        model_name, X_train_full, y_train_full, cv=10, scoring="accuracy"
-    )
-    return scores.mean(), scores.std()
+# def evaluateModelAccuracy(model_name):
+#     scores = cross_val_score(
+#         model_name, X_train_full, y_train_full, cv=10, scoring="accuracy"
+#     )
+#     return scores.mean(), scores.std()
 
 
-def evaluateModelRecall(model_name):
-    scores = cross_val_score(
-        model_name, X_train_full, y_train_full, cv=10, scoring="recall"
-    )
-    return scores.mean(), scores.std()
+# def evaluateModelRecall(model_name):
+#     scores = cross_val_score(
+#         model_name, X_train_full, y_train_full, cv=10, scoring="recall"
+#     )
+#     return scores.mean(), scores.std()
 
 
-def evaluateModelPrecision(model_name):
-    scores = cross_val_score(
-        model_name, X_train_full, y_train_full, cv=10, scoring="precision"
-    )
-    return scores.mean(), scores.std()
+# def evaluateModelPrecision(model_name):
+#     scores = cross_val_score(
+#         model_name, X_train_full, y_train_full, cv=10, scoring="precision"
+#     )
+#     return scores.mean(), scores.std()
 
 
-def evaluateModelF1(model_name):
-    scores = cross_val_score(
-        model_name, X_train_full, y_train_full, cv=10, scoring="f1"
-    )
-    return scores.mean(), scores.std()
+# def evaluateModelF1(model_name):
+#     scores = cross_val_score(
+#         model_name, X_train_full, y_train_full, cv=10, scoring="f1"
+#     )
+#     return scores.mean(), scores.std()
 
 
 # model selection
-model = SVC(random_state=0, probability=True)
+
+from sklearn.svm import SVC
+
+class Model:
+    def __init__(self) -> None:
+        self.model = SVC(random_state=0, probability=True)
+
+    def fit(self, X, y):
+        self.model.fit(X, y)
+
+    def predict(self, X):
+        return self.model.predict(X)
+
+    def predict_proba(self, X):
+        return self.model.predict_proba(X)
+
+    def evaluateAUC(self, X, y):
+        scores = cross_val_score(self.model, X, y, cv=10, scoring="roc_auc")
+        return scores.mean(), scores.std()
+
+    def evaluateAccuracy(self, X, y):
+        scores = cross_val_score(self.model, X, y, cv=10, scoring="accuracy")
+        return scores.mean(), scores.std()
+
+    def evaluateRecall(self, X, y):
+        scores = cross_val_score(self.model, X, y, cv=10, scoring="recall")
+        return scores.mean(), scores.std()
+
+    def evaluatePrecision(self, X, y):
+        scores = cross_val_score(self.model, X, y, cv=10, scoring="precision")
+        return scores.mean(), scores.std()
+
+    def evaluateF1(self, X, y):
+        scores = cross_val_score(self.model, X, y, cv=10, scoring="f1")
+        return scores.mean(), scores.std()
+
+
+model = Model()
 
 
 print("-" * 10)
 print("Model: ", type(model))
-auc, auc_std = evaluateModelAUC(model)
+auc, auc_std = model.evaluateAUC(X_train_full, y_train_full)
 print("AUC: %.6f (%.6f)" % (auc, auc_std))
-accuracy, accuracy_std = evaluateModelAccuracy(model)
+accuracy, accuracy_std = model.evaluateAccuracy(X_train_full, y_train_full)
 print("Accuracy: %.6f (%.6f)" % (accuracy, accuracy_std))
-recall, recall_std = evaluateModelRecall(model)
+recall, recall_std = model.evaluateRecall(X_train_full, y_train_full)
 print("Recall: %.6f (%.6f)" % (recall, recall_std))
-precision, precision_std = evaluateModelPrecision(model)
+precision, precision_std = model.evaluatePrecision(X_train_full, y_train_full)
 print("Precision: %.6f (%.6f)" % (precision, precision_std))
-f1, f1_std = evaluateModelF1(model)
+f1, f1_std = model.evaluateF1(X_train_full, y_train_full)
 print("F1: %.6f (%.6f)" % (f1, f1_std))
 
 
