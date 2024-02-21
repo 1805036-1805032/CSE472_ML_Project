@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -122,57 +123,72 @@ class ComplexNN(nn.Module):
 
 
 # Perform cross-validation
-# Combine training and test data for cross-validation
-X_full = np.concatenate((X_train_full, X_test_full), axis=0)
-y_full = np.concatenate((y_train_full, np.zeros(len(X_test_full))), axis=0)  # Assuming test data labels are unknown (set to 0)
+def evaluate_model(model, X, y, metrics=('roc_auc', 'accuracy', 'precision', 'recall', 'f1'), n_splits=10, random_state=42):
+    # Define cross-validation
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+    
+    # Initialize dictionaries to store scores for each metric
+    scores = {metric: [] for metric in metrics}
+    
+    # Perform cross-validation
+    for fold, (train_index, test_index) in enumerate(skf.split(X, y), 1):
+        print(f"Fold {fold}:")
+        
+        # Split data into training and validation sets for this fold
+        X_train, X_val = X[train_index], X[test_index]
+        y_train, y_val = y[train_index], y[test_index]
+        
+        # Convert data to PyTorch tensors
+        X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
+        y_train_tensor = torch.tensor(y_train, dtype=torch.float32)
+        X_val_tensor = torch.tensor(X_val, dtype=torch.float32)
+        
+        # Train the model
+        model = ComplexNN(input_size, hidden_size1, hidden_size2, output_size)
 
-# Define 10-fold cross-validation
-skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
-
-# Initialize lists to store ROC AUC scores
-roc_auc_scores = []
-
-for fold, (train_index, test_index) in enumerate(skf.split(X_full, y_full), 1):
-    print(f"Fold {fold}:")
+        model.fit(X_train_tensor, y_train_tensor)
+        
+        # Predict probabilities on the validation set
+        y_proba = model.predict_proba(X_val_tensor)
+        
+        # Calculate evaluation metrics
+        for metric in metrics:
+            if metric == 'roc_auc':
+                score = roc_auc_score(y_val, y_proba)
+            elif metric == 'accuracy':
+                y_pred = model.predict(X_val)
+                score = accuracy_score(y_val, y_pred)
+            elif metric == 'precision':
+                y_pred = model.predict(X_val)
+                score = precision_score(y_val, y_pred)
+            elif metric == 'recall':
+                y_pred = model.predict(X_val)
+                score = recall_score(y_val, y_pred)
+            elif metric == 'f1':
+                y_pred = model.predict(X_val)
+                score = f1_score(y_val, y_pred)
+            else:
+                raise ValueError(f"Unknown metric: {metric}")
+            
+            print(f"{metric.capitalize()}: {score:.4f}")
+            scores[metric].append(score)
     
-    # Split data into training and validation sets for this fold
-    X_train, X_val = X_full[train_index], X_full[test_index]
-    y_train, y_val = y_full[train_index], y_full[test_index]
+    # Calculate and print average scores across folds
+    avg_scores = {metric: np.mean(score_list) for metric, score_list in scores.items()}
+    print("Average Scores:")
+    for metric, score in avg_scores.items():
+        print(f"{metric.capitalize()}: {score:.4f}")
     
-    # Convert data to PyTorch tensors
-    X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
-    y_train_tensor = torch.tensor(y_train, dtype=torch.float32)
-    X_val_tensor = torch.tensor(X_val, dtype=torch.float32)
-    
-    # Instantiate the model
-    model = ComplexNN(input_size, hidden_size1, hidden_size2, output_size)
-    
-    # Train the model
-    model.fit(X_train_tensor, y_train_tensor)
-    
-    # Predict probabilities on the validation set
-    y_proba = model.predict_proba(X_val_tensor)
-    
-    # Calculate ROC AUC score
-    roc_auc = roc_auc_score(y_val, y_proba)
-    print(f"ROC AUC: {roc_auc:.4f}")
-    
-    # Store ROC AUC score
-    roc_auc_scores.append(roc_auc)
-
-# Calculate and print average ROC AUC score across folds
-print("Average ROC AUC Score:", np.mean(roc_auc_scores))
-
-## Done with cross-validation, now train the model on the full training data and make predictions on the test data
+    return avg_scores
     
 
 # Instantiate the model
 model = ComplexNN(input_size, hidden_size1, hidden_size2, output_size)
 
+scores = evaluate_model(model, np.array(X_train_full), np.array(y_train_full))
+
 # training and submission
-X_train = np.array(X_train_full)
-y_train = np.array(y_train_full)
-model.fit(X_train, y_train)
+model.fit(np.array(X_train_full), np.array(y_train_full))
 
 # Example usage of prediction
 # Assuming X_test_full is your test data
