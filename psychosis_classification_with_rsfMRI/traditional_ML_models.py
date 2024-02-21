@@ -70,45 +70,8 @@ print("y_train_full:", y_train_full.shape)
 print("X_test_full:", len(X_test_full))
 
 
-# # model metrics:
-# def evaluateModelAUC(model_name):
-#     scores = cross_val_score(
-#         model_name, X_train_full, y_train_full, cv=10, scoring="roc_auc"
-#     )
-#     return scores.mean(), scores.std()
-
-
-# def evaluateModelAccuracy(model_name):
-#     scores = cross_val_score(
-#         model_name, X_train_full, y_train_full, cv=10, scoring="accuracy"
-#     )
-#     return scores.mean(), scores.std()
-
-
-# def evaluateModelRecall(model_name):
-#     scores = cross_val_score(
-#         model_name, X_train_full, y_train_full, cv=10, scoring="recall"
-#     )
-#     return scores.mean(), scores.std()
-
-
-# def evaluateModelPrecision(model_name):
-#     scores = cross_val_score(
-#         model_name, X_train_full, y_train_full, cv=10, scoring="precision"
-#     )
-#     return scores.mean(), scores.std()
-
-
-# def evaluateModelF1(model_name):
-#     scores = cross_val_score(
-#         model_name, X_train_full, y_train_full, cv=10, scoring="f1"
-#     )
-#     return scores.mean(), scores.std()
-
-
-# model selection
-
 from sklearn.svm import SVC
+
 
 class Model:
     def __init__(self) -> None:

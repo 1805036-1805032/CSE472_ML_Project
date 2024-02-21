@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+# loading the dataset
 PATH_TO_BP = "/home/mmk/4_2_resources/CSE472_ML_Project/psychosis_classification_with_rsfMRI/train/BP"
 PATH_TO_SZ = "/home/mmk/4_2_resources/CSE472_ML_Project/psychosis_classification_with_rsfMRI/train/SZ"
 
@@ -64,11 +65,13 @@ print("y_train_full:", y_train_full.shape)
 print("X_test_full:", len(X_test_full))
 
 
-input_size = 5460  # Assuming 5460 features
-hidden_size = 64   # You can adjust this according to your needs
+# Define the neural network
+input_size = 5460
+hidden_size = 64
 hidden_size1 = 128
 hidden_size2 = 64
-output_size = 1    # For binary classification
+output_size = 1
+
 
 class ComplexNN(nn.Module):
     def __init__(self, input_size, hidden_size1, hidden_size2, output_size):
@@ -79,7 +82,7 @@ class ComplexNN(nn.Module):
         self.relu2 = nn.ReLU()
         self.fc3 = nn.Linear(hidden_size2, output_size)
         self.sigmoid = nn.Sigmoid()
-        
+
     def forward(self, x):
         out = self.fc1(x)
         out = self.relu1(out)
@@ -88,118 +91,120 @@ class ComplexNN(nn.Module):
         out = self.fc3(out)
         out = self.sigmoid(out)
         return out
-    
+
     def fit(self, X_train, y_train, num_epochs=100, batch_size=32):
         criterion = nn.BCELoss()
         optimizer = optim.Adam(self.parameters())
-        
+
         for epoch in range(num_epochs):
             for i in range(0, len(X_train), batch_size):
-                inputs = torch.tensor(X_train[i:i+batch_size], dtype=torch.float32)
-                targets = torch.tensor(y_train[i:i+batch_size], dtype=torch.float32).view(-1, 1)
-                
+                inputs = torch.tensor(X_train[i : i + batch_size], dtype=torch.float32)
+                targets = torch.tensor(
+                    y_train[i : i + batch_size], dtype=torch.float32
+                ).view(-1, 1)
+
                 # Forward pass
                 outputs = self(inputs)
                 loss = criterion(outputs, targets)
-                
+
                 # Backward and optimize
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                
-            if (epoch+1) % 10 == 0:
-                print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
-    
+
+            if (epoch + 1) % 10 == 0:
+                print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}")
+
     def predict_proba(self, X):
         with torch.no_grad():
             inputs = torch.tensor(X, dtype=torch.float32)
             outputs = self.forward(inputs).numpy()
             return outputs
-    
+
     def predict(self, X, threshold=0.5):
         proba = self.predict_proba(X)
         return (proba >= threshold).astype(int)
-    
 
 
 # Perform cross-validation
-def evaluate_model(model, X, y, metrics=('roc_auc', 'accuracy', 'precision', 'recall', 'f1'), n_splits=10, random_state=42):
-    # Define cross-validation
+def evaluate_model(
+    X,
+    y,
+    metrics=("roc_auc", "accuracy", "precision", "recall", "f1"),
+    n_splits=10,
+    random_state=42,
+):
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
-    
+
     # Initialize dictionaries to store scores for each metric
     scores = {metric: [] for metric in metrics}
-    
+
     # Perform cross-validation
     for fold, (train_index, test_index) in enumerate(skf.split(X, y), 1):
         print(f"Fold {fold}:")
-        
+
         # Split data into training and validation sets for this fold
         X_train, X_val = X[train_index], X[test_index]
         y_train, y_val = y[train_index], y[test_index]
-        
+
         # Convert data to PyTorch tensors
         X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
         y_train_tensor = torch.tensor(y_train, dtype=torch.float32)
         X_val_tensor = torch.tensor(X_val, dtype=torch.float32)
-        
+
         # Train the model
         model = ComplexNN(input_size, hidden_size1, hidden_size2, output_size)
 
         model.fit(X_train_tensor, y_train_tensor)
-        
-        # Predict probabilities on the validation set
+
+        # Predict y_preds_prob on the validation set
         y_proba = model.predict_proba(X_val_tensor)
-        
+
         # Calculate evaluation metrics
         for metric in metrics:
-            if metric == 'roc_auc':
+            if metric == "roc_auc":
                 score = roc_auc_score(y_val, y_proba)
-            elif metric == 'accuracy':
+            elif metric == "accuracy":
                 y_pred = model.predict(X_val)
                 score = accuracy_score(y_val, y_pred)
-            elif metric == 'precision':
+            elif metric == "precision":
                 y_pred = model.predict(X_val)
                 score = precision_score(y_val, y_pred)
-            elif metric == 'recall':
+            elif metric == "recall":
                 y_pred = model.predict(X_val)
                 score = recall_score(y_val, y_pred)
-            elif metric == 'f1':
+            elif metric == "f1":
                 y_pred = model.predict(X_val)
                 score = f1_score(y_val, y_pred)
             else:
                 raise ValueError(f"Unknown metric: {metric}")
-            
+
             print(f"{metric.capitalize()}: {score:.4f}")
             scores[metric].append(score)
-    
+
     # Calculate and print average scores across folds
     avg_scores = {metric: np.mean(score_list) for metric, score_list in scores.items()}
+    print("-" * 10)
     print("Average Scores:")
     for metric, score in avg_scores.items():
         print(f"{metric.capitalize()}: {score:.4f}")
-    
+
     return avg_scores
-    
 
-# Instantiate the model
+
+scores = evaluate_model(np.array(X_train_full), np.array(y_train_full))
+
+# done with cross validation
+
+# train and submit
 model = ComplexNN(input_size, hidden_size1, hidden_size2, output_size)
-
-scores = evaluate_model(model, np.array(X_train_full), np.array(y_train_full))
-
-# training and submission
 model.fit(np.array(X_train_full), np.array(y_train_full))
+y_preds_prob = model.predict_proba(np.array(X_test_full))
+print("y_preds_prob shape:", y_preds_prob.shape)
+print("y_preds_prob:", y_preds_prob[:5])
 
-# Example usage of prediction
-# Assuming X_test_full is your test data
-X_test = np.array(X_test_full)
-
-# Example usage of predict_proba
-probabilities = model.predict_proba(X_test)
-print("Probabilities:", probabilities)
-print("Probabilities shape:", probabilities.shape)
 
 output_df = pd.DataFrame(
-    {"ID": pd.Series(test_folder_names), "Predicted": pd.Series(probabilities[:, 0])}
+    {"ID": pd.Series(test_folder_names), "Predicted": pd.Series(y_preds_prob[:, 0])}
 )
 output_df.to_csv("submission.csv", index=False)
