@@ -1,7 +1,8 @@
 import os
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import cross_val_score
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import StratifiedKFold, cross_val_score
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -87,7 +88,7 @@ class ComplexNN(nn.Module):
         out = self.sigmoid(out)
         return out
     
-    def fit(self, X_train, y_train, num_epochs=1000, batch_size=32):
+    def fit(self, X_train, y_train, num_epochs=100, batch_size=32):
         criterion = nn.BCELoss()
         optimizer = optim.Adam(self.parameters())
         
@@ -117,6 +118,52 @@ class ComplexNN(nn.Module):
     def predict(self, X, threshold=0.5):
         proba = self.predict_proba(X)
         return (proba >= threshold).astype(int)
+    
+
+
+# Perform cross-validation
+# Combine training and test data for cross-validation
+X_full = np.concatenate((X_train_full, X_test_full), axis=0)
+y_full = np.concatenate((y_train_full, np.zeros(len(X_test_full))), axis=0)  # Assuming test data labels are unknown (set to 0)
+
+# Define 10-fold cross-validation
+skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+
+# Initialize lists to store ROC AUC scores
+roc_auc_scores = []
+
+for fold, (train_index, test_index) in enumerate(skf.split(X_full, y_full), 1):
+    print(f"Fold {fold}:")
+    
+    # Split data into training and validation sets for this fold
+    X_train, X_val = X_full[train_index], X_full[test_index]
+    y_train, y_val = y_full[train_index], y_full[test_index]
+    
+    # Convert data to PyTorch tensors
+    X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
+    y_train_tensor = torch.tensor(y_train, dtype=torch.float32)
+    X_val_tensor = torch.tensor(X_val, dtype=torch.float32)
+    
+    # Instantiate the model
+    model = ComplexNN(input_size, hidden_size1, hidden_size2, output_size)
+    
+    # Train the model
+    model.fit(X_train_tensor, y_train_tensor)
+    
+    # Predict probabilities on the validation set
+    y_proba = model.predict_proba(X_val_tensor)
+    
+    # Calculate ROC AUC score
+    roc_auc = roc_auc_score(y_val, y_proba)
+    print(f"ROC AUC: {roc_auc:.4f}")
+    
+    # Store ROC AUC score
+    roc_auc_scores.append(roc_auc)
+
+# Calculate and print average ROC AUC score across folds
+print("Average ROC AUC Score:", np.mean(roc_auc_scores))
+
+## Done with cross-validation, now train the model on the full training data and make predictions on the test data
     
 
 # Instantiate the model
