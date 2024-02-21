@@ -7,6 +7,12 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import warnings
+
+
+np.random.seed(0)
+torch.manual_seed(0)
+warnings.filterwarnings("ignore")
 
 # loading the dataset
 PATH_TO_BP = "/home/mmk/4_2_resources/CSE472_ML_Project/psychosis_classification_with_rsfMRI/train/BP"
@@ -130,9 +136,9 @@ class ComplexNN(nn.Module):
 def evaluate_model(
     X,
     y,
-    metrics=("roc_auc", "accuracy", "precision", "recall", "f1"),
+    metrics=("roc_auc", "accuracy", "recall", "precision", "f1"),
     n_splits=10,
-    random_state=42,
+    random_state=0,
 ):
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
 
@@ -198,6 +204,7 @@ scores = evaluate_model(np.array(X_train_full), np.array(y_train_full))
 
 # train and submit
 model = ComplexNN(input_size, hidden_size1, hidden_size2, output_size)
+print(model)
 model.fit(np.array(X_train_full), np.array(y_train_full))
 y_preds_prob = model.predict_proba(np.array(X_test_full))
 print("y_preds_prob shape:", y_preds_prob.shape)
