@@ -1,6 +1,10 @@
 import os
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import cross_val_score
+import torch
+import torch.nn as nn
+import torch.optim as optim
 
 PATH_TO_BP = "/home/mmk/4_2_resources/CSE472_ML_Project/psychosis_classification_with_rsfMRI/train/BP"
 PATH_TO_SZ = "/home/mmk/4_2_resources/CSE472_ML_Project/psychosis_classification_with_rsfMRI/train/SZ"
@@ -60,25 +64,26 @@ print("X_test_full:", len(X_test_full))
 
 input_size = 5460  # Assuming 5460 features
 hidden_size = 64   # You can adjust this according to your needs
+hidden_size1 = 128
+hidden_size2 = 64
 output_size = 1    # For binary classification
 
-
-import torch
-import torch.nn as nn
-import torch.optim as optim
-
-class SimpleNN(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(SimpleNN, self).__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(hidden_size, output_size)
+class ComplexNN(nn.Module):
+    def __init__(self, input_size, hidden_size1, hidden_size2, output_size):
+        super(ComplexNN, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size1)
+        self.relu1 = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_size1, hidden_size2)
+        self.relu2 = nn.ReLU()
+        self.fc3 = nn.Linear(hidden_size2, output_size)
         self.sigmoid = nn.Sigmoid()
         
     def forward(self, x):
         out = self.fc1(x)
-        out = self.relu(out)
+        out = self.relu1(out)
         out = self.fc2(out)
+        out = self.relu2(out)
+        out = self.fc3(out)
         out = self.sigmoid(out)
         return out
     
@@ -106,31 +111,32 @@ class SimpleNN(nn.Module):
     def predict_proba(self, X):
         with torch.no_grad():
             inputs = torch.tensor(X, dtype=torch.float32)
-            # outputs = self(inputs).numpy()
             outputs = self.forward(inputs).numpy()
             return outputs
     
     def predict(self, X, threshold=0.5):
         proba = self.predict_proba(X)
         return (proba >= threshold).astype(int)
-
-# Example usage:
-# Assuming X_train_full and y_train_full are your training data
-X_train = np.array(X_train_full)
-y_train = np.array(y_train_full)
+    
 
 # Instantiate the model
-model = SimpleNN(input_size, hidden_size, output_size)
+model = ComplexNN(input_size, hidden_size1, hidden_size2, output_size)
 
-# Train the model
+# training and submission
+X_train = np.array(X_train_full)
+y_train = np.array(y_train_full)
 model.fit(X_train, y_train)
 
 # Example usage of prediction
 # Assuming X_test_full is your test data
 X_test = np.array(X_test_full)
-predictions = model.predict(X_test)
-print("Predictions:", predictions)
 
 # Example usage of predict_proba
 probabilities = model.predict_proba(X_test)
 print("Probabilities:", probabilities)
+print("Probabilities shape:", probabilities.shape)
+
+output_df = pd.DataFrame(
+    {"ID": pd.Series(test_folder_names), "Predicted": pd.Series(probabilities[:, 0])}
+)
+output_df.to_csv("submission.csv", index=False)
