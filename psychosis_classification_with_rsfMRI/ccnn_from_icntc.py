@@ -37,38 +37,28 @@ X_train_full = []
 y_train_full = []
 X_test_full = []
 
+def calculate_connectome(icn_tc_array):
+    correlations = np.corrcoef(icn_tc_array.T)
+    return correlations
+
 for i in range(len(BP_folders_paths)):
     icn_tc_array = np.load(os.path.join(BP_folders_paths[i], "icn_tc.npy"))
-
-    connectome = np.zeros((105, 105))
-
-    for connectome_row in range(105):
-        measures_1 = icn_tc_array[:, connectome_row]
-        for connectome_col in range(105):
-            measures_2 = icn_tc_array[:, connectome_col]
-            connectome[connectome_row, connectome_col] = np.corrcoef(
-                measures_1, measures_2
-            )[0, 1]
-
+    connectome = calculate_connectome(icn_tc_array)
     X_train_full.append(connectome)
     y_train_full.append(1)
 
 
 for i in range(len(SZ_folders_paths)):
     icn_tc_array = np.load(os.path.join(SZ_folders_paths[i], "icn_tc.npy"))
-
-    connectome = np.zeros((105, 105))
-
-    for connectome_row in range(105):
-        measures_1 = icn_tc_array[:, connectome_row]
-        for connectome_col in range(105):
-            measures_2 = icn_tc_array[:, connectome_col]
-            connectome[connectome_row, connectome_col] = np.corrcoef(
-                measures_1, measures_2
-            )[0, 1]
-
+    connectome = calculate_connectome(icn_tc_array)
     X_train_full.append(connectome)
     y_train_full.append(0)
+
+
+for i in range(len(test_folder_paths)):
+    icn_tc_array = np.load(os.path.join(test_folder_paths[i], "icn_tc.npy"))
+    connectome = calculate_connectome(icn_tc_array)
+    X_test_full.append(connectome)
 
 
 X_train_full = np.array(X_train_full)
