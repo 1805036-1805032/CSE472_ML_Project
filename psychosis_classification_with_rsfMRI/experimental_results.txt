@@ -35,3 +35,19 @@ Accuracy: 0.628546 (0.041787)
 Recall: 0.458772 (0.135777)
 Precision: 0.530955 (0.065185)
 F1: 0.480672 (0.084533)
+
+
+----------
+LR from upper triangular matrix of Connectome
+AUC: 0.633511 (0.085141)
+Accuracy: 0.611569 (0.067922)
+Recall: 0.460234 (0.127481)
+Precision: 0.497930 (0.092291)
+F1: 0.473699 (0.107547)
+
+LR from upper triangular matrix of Connectome
+AUC: 0.633511 (0.085141)
+Accuracy: 0.611569 (0.067922)
+Recall: 0.460234 (0.127481)
+Precision: 0.497930 (0.092291)
+F1: 0.473699 (0.107547)
