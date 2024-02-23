@@ -73,9 +73,9 @@ print("X_test_full:", len(X_test_full))
 
 # Define the neural network
 input_size = 5460
-hidden_size = 64
-hidden_size1 = 128
-hidden_size2 = 64
+hidden_size = 128
+hidden_size1 = 256
+hidden_size2 = 128
 output_size = 1
 
 
@@ -193,7 +193,7 @@ def evaluate_model(
     print("-" * 10)
     print("Average Scores:")
     for metric, score in avg_scores.items():
-        print(f"{metric.capitalize()}: {score:.4f}")
+        print(f"{metric.capitalize()}: {score:.6f}")
 
     return avg_scores
 
