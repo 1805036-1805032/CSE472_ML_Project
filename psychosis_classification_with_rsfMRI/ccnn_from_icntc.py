@@ -37,62 +37,39 @@ X_train_full = []
 y_train_full = []
 X_test_full = []
 
-whole_icn_df = pd.DataFrame()
-
-
 for i in range(len(BP_folders_paths)):
-
     icn_tc_array = np.load(os.path.join(BP_folders_paths[i], "icn_tc.npy"))
-    icn_tc_df = pd.DataFrame(icn_tc_array)
-    
-    icn_tc_df["sub_num"] = BP_folder_names[i]
+
+    connectome = np.zeros((105, 105))
+
+    for connectome_row in range(105):
+        measures_1 = icn_tc_array[:, connectome_row]
+        for connectome_col in range(105):
+            measures_2 = icn_tc_array[:, connectome_col]
+            connectome[connectome_row, connectome_col] = np.corrcoef(
+                measures_1, measures_2
+            )[0, 1]
+
+    X_train_full.append(connectome)
     y_train_full.append(1)
-    whole_icn_df = pd.concat([whole_icn_df, icn_tc_df], axis=0)
 
 
 for i in range(len(SZ_folders_paths)):
-
     icn_tc_array = np.load(os.path.join(SZ_folders_paths[i], "icn_tc.npy"))
-    icn_tc_df = pd.DataFrame(icn_tc_array)
-    icn_tc_df["sub_num"] = SZ_folder_names[i]
-    
-    whole_icn_df = pd.concat([whole_icn_df, icn_tc_df], axis=0)
 
-column_names = [ f"col_{str(x)}" for x in range(105)]
-column_names.append("sub_num")
-
-whole_icn_df.columns = column_names
-
-print("Whole icn_tc dataframe is created")
-
-i = 0
-
-for sub_num in whole_icn_df["sub_num"].unique():
-    sub_df = whole_icn_df[whole_icn_df["sub_num"] == sub_num]
-    # for each subject, building the connectome / correalaion matrix
-    
     connectome = np.zeros((105, 105))
 
-    for row in range(105):
-        measures_1 = sub_df[f"col_{row}"]
-        for col in range(105):
-            measures_2 = sub_df[f"col_{col}"]
-            connectome[row, col] = np.corrcoef(measures_1, measures_2)[0, 1]        
-        
-            
-    # # sanity check, checking if the connectome is correct
-    # print(type(connectome))
-    # print(connectome.shape)
+    for connectome_row in range(105):
+        measures_1 = icn_tc_array[:, connectome_row]
+        for connectome_col in range(105):
+            measures_2 = icn_tc_array[:, connectome_col]
+            connectome[connectome_row, connectome_col] = np.corrcoef(
+                measures_1, measures_2
+            )[0, 1]
 
-    # plt.imshow(connectome, cmap='coolwarm', interpolation='nearest')
-    # plt.show()
-            
     X_train_full.append(connectome)
-    print(f"done with sub {sub_num}")
+    y_train_full.append(0)
 
-    i += 1
-    if i == 5:
-        break
 
 X_train_full = np.array(X_train_full)
 X_test_full = np.array(X_test_full)
