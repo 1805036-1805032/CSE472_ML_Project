@@ -9,6 +9,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import PowerTransformer
 from sklearn.svm import SVC
+from imblearn.over_sampling import SMOTE
+from imblearn.combine import SMOTETomek
 
 
 np.random.seed(1)
@@ -95,14 +97,25 @@ print("X_test_full:", X_test_full.shape)
 
 
 # Noise reduction
-a = 0.2
-X_train_full = np.where(np.abs(X_train_full) > a, X_train_full, 0)
-X_test_full = np.where(np.abs(X_test_full) > a, X_test_full, 0)
+# a = 0.2
+# X_train_full = np.where(np.abs(X_train_full) > a, X_train_full, 0)
+# X_test_full = np.where(np.abs(X_test_full) > a, X_test_full, 0)
+
+
+# SMOTE
+# smote = SMOTE()
+# X_train_full, y_train_full = smote.fit_resample(X_train_full, y_train_full)
+
+
+# SMOTETomek
+smote_tomek = SMOTETomek()
+X_train_full, y_train_full = smote_tomek.fit_resample(X_train_full, y_train_full)
 
 
 class Model:
     def __init__(self) -> None:
-        self.model = SVC(random_state=0, probability=True)
+        # self.model = SVC(random_state=0, probability=True)
+        self.model = LogisticRegression(random_state=0, max_iter=1000)
 
     def fit(self, X, y):
         self.model.fit(X, y)
@@ -149,6 +162,7 @@ precision, precision_std = model.evaluatePrecision(X_train_full, y_train_full)
 print("Precision: %.6f (%.6f)" % (precision, precision_std))
 f1, f1_std = model.evaluateF1(X_train_full, y_train_full)
 print("F1: %.6f (%.6f)" % (f1, f1_std))
+
 
 
 # training and submission
