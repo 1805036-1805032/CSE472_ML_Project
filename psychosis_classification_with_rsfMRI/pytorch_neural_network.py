@@ -73,32 +73,39 @@ print("X_test_full:", len(X_test_full))
 
 # Define the neural network
 input_size = 5460
-hidden_size = 128
 hidden_size1 = 256
 hidden_size2 = 128
+hidden_size3 = 128
 output_size = 1
 
 
 class ComplexNN(nn.Module):
-    def __init__(self, input_size, hidden_size1, hidden_size2, output_size):
+    def __init__(
+        self, input_size, hidden_size1, hidden_size2, hidden_size3, output_size
+    ):
         super(ComplexNN, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size1)
-        self.relu1 = nn.ReLU()
         self.fc2 = nn.Linear(hidden_size1, hidden_size2)
-        self.relu2 = nn.ReLU()
-        self.fc3 = nn.Linear(hidden_size2, output_size)
+        self.fc3 = nn.Linear(hidden_size2, hidden_size3)
+        self.fc4 = nn.Linear(hidden_size3, output_size)
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(p=0.1)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         out = self.fc1(x)
-        out = self.relu1(out)
+        out = self.relu(out)
+        out = self.dropout(out)
         out = self.fc2(out)
-        out = self.relu2(out)
+        out = self.relu(out)
         out = self.fc3(out)
+        out = self.relu(out)
+        out = self.dropout(out)
+        out = self.fc4(out)
         out = self.sigmoid(out)
         return out
 
-    def fit(self, X_train, y_train, num_epochs=100, batch_size=32):
+    def fit(self, X_train, y_train, num_epochs=120, batch_size=32):
         criterion = nn.BCELoss()
         optimizer = optim.Adam(self.parameters())
 
@@ -159,7 +166,9 @@ def evaluate_model(
         X_val_tensor = torch.tensor(X_val, dtype=torch.float32)
 
         # Train the model
-        model = ComplexNN(input_size, hidden_size1, hidden_size2, output_size)
+        model = ComplexNN(
+            input_size, hidden_size1, hidden_size2, hidden_size3, output_size
+        )
 
         model.fit(X_train_tensor, y_train_tensor)
 
@@ -203,7 +212,7 @@ scores = evaluate_model(np.array(X_train_full), np.array(y_train_full))
 # done with cross validation
 
 # train and submit
-model = ComplexNN(input_size, hidden_size1, hidden_size2, output_size)
+model = ComplexNN(input_size, hidden_size1, hidden_size2, hidden_size3, output_size)
 print(model)
 model.fit(np.array(X_train_full), np.array(y_train_full))
 y_preds_prob = model.predict_proba(np.array(X_test_full))
